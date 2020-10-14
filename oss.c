@@ -4,7 +4,7 @@ CS4760 Project 3
 10/20/2020
 */
 
-#include <stdio,h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   int maxSecs = 20;
 
   int optionIndex;
-  while ((optionIndex = getopt(argc, argv, "hn:s:t:")) != -1) {
+  while ((optionIndex = getopt(argc, argv, "hc:l:t:")) != -1) {
     switch (optionIndex) {
       case 'h':
           printf("Welcome to the Valid Argument Usage Dimension\n");
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
       case 'l':
         if (optarg == NULL) {
-          optarg = "log.txt"
+          optarg = "log.txt";
         }
         filename = optarg;
         break;
@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
 
     }
   }
-
   printf("getopt test: -c: %d -l: %s -t: %d\n", maxProc, filename, maxSecs);
 
   return 0;
