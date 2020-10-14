@@ -79,5 +79,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  printf("getopt test: -c: %d -l: %s -t: %d\n", maxProc, filename, maxSecs);
+
   return 0;
 }
