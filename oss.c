@@ -12,9 +12,12 @@ CS4760 Project 3
 #include <sys/shm.h>
 #include <sys/msg.h>
 
-#define SHMSZ 256
-
 FILE* outfile;
+
+typedef struct shareClock{
+  int secs;
+  int nano;
+}shareClock;
 
 int main(int argc, char *argv[]) {
 
@@ -79,6 +82,29 @@ int main(int argc, char *argv[]) {
     }
   }
   printf("getopt test: -c: %d -l: %s -t: %d\n", maxProc, filename, maxSecs);
+
+  //next step: set up shared memory!
+  //We'll do share clock with test values 612 and 6633
+  int shmid;
+  key_t key = 1337;
+  int* shm; // <- this should be the shareClock, right? or its the shared int?
+  //create shared mem segment...
+  //sizeof int for seconds and nanoseconds... dont need a struct for clock?
+  if ((shmid = shmget(key, 2*sizeof(int), IPC_CREAT | 0666)) < 0) {
+    perror("oss: error created shared memory segment.");
+    exit(1);
+  }
+  //attach segment to dataspace...
+  if ((shm = shmat(shmid, NULL, 9=0)) == (int*) -1) {
+    perror("oss: error attaching shared memory.");
+    exit(1);
+  }
+
+  //here we'll have to write to shared memory...
+  *(shm+0) = 612;
+  *(shm+1) = 6633;
+
+  //NEXT TIME ON DRAGON BALL Z- GOKU SETS UP USER.C TO READ SHARED MEMORY.
 
   return 0;
 }
