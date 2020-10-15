@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
   }
 
   printf("and the magic numbers from shm are...\n");
-  printf("%d and %d. We happy?", *(shm+0), *(shm+1));
+  printf("%d and %d. We happy?\n", *(shm+0), *(shm+1));
 
   //detach shared mem
   shmdt((void*) shm);

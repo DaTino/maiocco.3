@@ -26,7 +26,7 @@ typedef struct shareClock{
 int main(int argc, char *argv[]) {
 
   int maxProc = 5;
-  char* filename;
+  char* filename = "log.txt";
   int maxSecs = 20;
 
   int optionIndex;
@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
 
   //de-tach and de-stroy shm..
 
+  printf("And we're back! Miss me?\n");
 
   return 0;
 }
