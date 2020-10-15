@@ -11,6 +11,9 @@ CS4760 Project 3
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+
 
 FILE* outfile;
 
@@ -103,7 +106,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   //attach segment to dataspace...
-  if ((shm = shmat(shmid, NULL, 9=0)) == (int*) -1) {
+  if ((shm = shmat(shmid, NULL, 0)) == (int*) -1) {
     perror("oss: error attaching shared memory.");
     exit(1);
   }
@@ -126,16 +129,17 @@ int main(int argc, char *argv[]) {
 static void interruptHandler() {
   key_t key = 1337;
   int* shm;
+  int shmid;
   if ((shmid = shmget(key, 2*sizeof(int), IPC_CREAT | 0666)) < 0) {
     perror("oss: error created shared memory segment.");
     exit(1);
   }
-  if ((shm = shmat(shmid, NULL, 9=0)) == (int*) -1) {
+  if ((shm = shmat(shmid, NULL, 0)) == (int*) -1) {
     perror("oss: error attaching shared memory.");
     exit(1);
   }
   //close file...
-  fprintf(outfile, "Interrupt in yo face @ %ds, %dns\n", *);
+  fprintf(outfile, "Interrupt in yo face @ %ds, %dns\n", *(shm+0), *(shm+1));
   fclose(outfile);
   //cleanup shm...
   shmctl(shmid, IPC_RMID, NULL);
