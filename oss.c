@@ -17,6 +17,8 @@ CS4760 Project 3
 
 FILE* outfile;
 
+static void interruptHandler();
+
 //this struct might not be a great idea...
 typedef struct shareClock{
   int secs;
