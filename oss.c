@@ -14,6 +14,7 @@ CS4760 Project 3
 
 FILE* outfile;
 
+//this struct might not be a great idea...
 typedef struct shareClock{
   int secs;
   int nano;
@@ -83,6 +84,13 @@ int main(int argc, char *argv[]) {
   }
   printf("getopt test: -c: %d -l: %s -t: %d\n", maxProc, filename, maxSecs);
 
+  //open log file for editing
+  outfile = fopen(filename, "a+");
+  if (!outfile) {
+    perror("oss: error opening output log.");
+    exit(1);
+  }
+
   //next step: set up shared memory!
   //We'll do share clock with test values 612 and 6633
   int shmid;
@@ -105,6 +113,33 @@ int main(int argc, char *argv[]) {
   *(shm+1) = 6633;
 
   //NEXT TIME ON DRAGON BALL Z- GOKU SETS UP USER.C TO READ SHARED MEMORY.
+  //exec y00zer...
+  char *args[]={"./user", NULL};
+  execvp(args[0], args);
+
+  //de-tach and de-stroy shm..
+
 
   return 0;
+}
+
+static void interruptHandler() {
+  key_t key = 1337;
+  int* shm;
+  if ((shmid = shmget(key, 2*sizeof(int), IPC_CREAT | 0666)) < 0) {
+    perror("oss: error created shared memory segment.");
+    exit(1);
+  }
+  if ((shm = shmat(shmid, NULL, 9=0)) == (int*) -1) {
+    perror("oss: error attaching shared memory.");
+    exit(1);
+  }
+  //close file...
+  fprintf(outfile, "Interrupt in yo face @ %ds, %dns\n", *);
+  fclose(outfile);
+  //cleanup shm...
+  shmctl(shmid, IPC_RMID, NULL);
+  //eliminate any witnesses...
+  kill(0, SIGKILL);
+  exit(0);
 }
