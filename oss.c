@@ -112,18 +112,47 @@ int main(int argc, char *argv[]) {
   }
 
   //here we'll have to write to shared memory...
-  *(shm+0) = 612;
-  *(shm+1) = 6633;
+  *(shm+0) = 0;
+  *(shm+1) = 0;
 
   //NEXT TIME ON DRAGON BALL Z- GOKU SETS UP USER.C TO READ SHARED MEMORY.
   //exec y00zer...
-  char *args[]={"./user", NULL};
-  execvp(args[0], args);
+
+  //Using the interupt handlers...
+  // alarm for max time and ctrl-c
+  signal(SIGALRM, interruptHandler);
+  signal(SIGINT, interruptHandler);
+  alarm(maxSecs);
+
+  //so we want one child to deal with this,
+  //then we set up message queue
+  //this part evolves into Critsec at lvl 35. Gotta start grinding!
+  pid_t childpid = 0;
+  int status = 0;
+  int pid = 0;
+  if((childpid = fork()) < 0) {
+    perror("./oss: ...it was a stillbirth.");
+    exit(-1);
+  } else if (childpid == 0) {
+    printf("Red %d standing by!\n", getpid());
+    char *args[]={"./user", "25", "612"};
+    execvp(args[0], args);
+  }
+
+  //don't want to destroy shm too fast, so we wait for child to finish.
+  do {
+    pid = waitpid(-1, &status, WNOHANG);
+  } while(pid == 0);
 
   //de-tach and de-stroy shm..
-
   printf("And we're back! Miss me?\n");
+  //detach shared mem
+  shmdt((void*) shm);
+  //delete shared mem
+  shmctl(shmid, IPC_RMID, NULL);
+  printf("shm has left us for Sto'Vo'Kor\n");
 
+  printf("fin.\n");
   return 0;
 }
 
