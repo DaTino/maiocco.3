@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
   } while(pid == 0);
 
   //de-tach and de-stroy shm..
-  printf("And we're back! Miss me?\n");
+  printf("And we're back! shm contains %ds and %dns.\n", *(shm+0), *(shm+1));
   //detach shared mem
   shmdt((void*) shm);
   //delete shared mem
