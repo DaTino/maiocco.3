@@ -26,20 +26,23 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
+  time_t t;
+  srand((unsigned) time(&t));
+  int nsec = rand() % 1000000;
+
+  int shmid;
+  key_t key = 1337;
+  int* shm;
+
   //So this is the critical section I believe.
 
   while (1) {
     //Entrance criteria: must have a message.
     if (msgrcv(msqid, &mb, sizeof(int), 0, 0)) {
         //doing stuff in the critical section.
-        time_t t;
-        srand((unsigned) time(&t));
-        int nsec = rand() % 1000000;
 
         //shared memory mess here
-        int shmid;
-        key_t key = 1337;
-        int* shm;
+
         //get at that shared mammory...
         if ((shmid = shmget(key, 2*sizeof(int), IPC_CREAT | 0666)) < 0) {
           perror("user: error created shared memory segment.");
