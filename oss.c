@@ -13,9 +13,16 @@ CS4760 Project 3
 #include <sys/msg.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <time.h>
+#include <math.h>
 
 
 FILE* outfile;
+
+struct msgBuffer {
+  long mtype;
+  int msgData=1;
+}message;
 
 static void interruptHandler();
 
@@ -26,6 +33,9 @@ typedef struct shareClock{
 }shareClock;
 
 int main(int argc, char *argv[]) {
+
+  strict timespec tstart={0,0}, tend={0,0};
+  clock_gettime(CLOCK_MONOTONIC, &tstart);
 
   int maxProc = 5;
   char* filename = "log.txt";
@@ -103,7 +113,8 @@ int main(int argc, char *argv[]) {
   int* shm; // <- this should be the shareClock, right? or its the shared int?
   //create shared mem segment...
   //sizeof int for seconds and nanoseconds... dont need a struct for clock?
-  if ((shmid = shmget(key, 2*sizeof(int), IPC_CREAT | 0666)) < 0) {
+  //added size to hold shmPID
+  if ((shmid = shmget(key, 3*sizeof(int), IPC_CREAT | 0666)) < 0) {
     perror("oss: error created shared memory segment.");
     exit(1);
   }
@@ -112,38 +123,73 @@ int main(int argc, char *argv[]) {
     perror("oss: error attaching shared memory.");
     exit(1);
   }
-
   //here we'll have to write to shared memory...
   *(shm+0) = 0;
   *(shm+1) = 0;
+  //this is the shared int
+  *(shm+2) = 0;
 
   //NEXT TIME ON DRAGON BALL Z- GOKU SETS UP USER.C TO READ SHARED MEMORY.
   //exec y00zer...
+
+  //Dear Dr. Hauschild- if you make it this far, listen to The 6th Gate by D-Devils and tell me what you think
+  //anyways, Ima set up a  message queue below.
+
+  //create message queue
+  message mb;
+  int msqid;
+  key_t msgKey = 612;
+
+  if ((msqid = msgget(msgKey, 0666 | IPC_CREAT)) == -1) {
+    perror("oss: error creating message queue.");
+    exit(1);
+  }
 
   //Using the interupt handlers...
   // alarm for max time and ctrl-c
   signal(SIGALRM, interruptHandler);
   signal(SIGINT, interruptHandler);
-  alarm(maxSecs);
+  alarm(2);
 
   //so we want one child to deal with this,
   //then we set up message queue
   //this part evolves into Critsec at lvl 35. Gotta start grinding!
+
+  //Main loop w/ critical section parts:
+    //check if we should make child
+      //make child
+      //keep track of number of children made
+      //exec w/ child
+    //look for finished children or get update(?) for active children
+
+
   pid_t childpid = 0;
   int status = 0;
   int pid = 0;
   if((childpid = fork()) < 0) {
     perror("./oss: ...it was a stillbirth.");
-    exit(-1);
+    exit(1);
   } else if (childpid == 0) {
-    printf("Red %d standing by!\n", getpid());
-    char *args[]={"./user", "25", "612"};
+    double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
+    double total_sec = floor(total_nsec/1e9);
+    double nsec_part = fmod(total_nsec, 1e9);
+    fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
+    char *args[]={"./user", NULL};
     execvp(args[0], args);
+  }
+
+  //send the initial message to get everything going
+  if (msgsnd(msqid, &mb, sizeof(int), 0) == -1) {
+    perror("oss: Message failed to send.");
+    exit(1);
   }
 
   //don't want to destroy shm too fast, so we wait for child to finish.
   do {
     pid = waitpid(-1, &status, WNOHANG);
+    if (*(shm+2) != 0) {
+      fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
+    }
   } while(pid == 0);
 
   //de-tach and de-stroy shm..
@@ -153,7 +199,11 @@ int main(int argc, char *argv[]) {
   //delete shared mem
   shmctl(shmid, IPC_RMID, NULL);
   printf("shm has left us for Sto'Vo'Kor\n");
-
+  if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+       perror("oss: msgctl failed to kill the queue");
+       exit(1);
+   }
+  
   printf("fin.\n");
   return 0;
 }
@@ -175,6 +225,11 @@ static void interruptHandler() {
   fclose(outfile);
   //cleanup shm...
   shmctl(shmid, IPC_RMID, NULL);
+  //cleanup shared MEMORY
+  if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+       perror("oss: msgctl failed to kill the queue");
+       exit(1);
+   }
   //eliminate any witnesses...
   kill(0, SIGKILL);
   exit(0);
