@@ -208,10 +208,12 @@ int main(int argc, char *argv[]) {
         }
       } while(pid == 0);
     }
+	//printf("proc_count: %d\n", proc_count);
+  clock_gettime(CLOCK_MONOTONIC, &tend); 
+ }
 
-  }
 
-
+  printf("total: %d, time: %d\n", total, (int)tend.tv_sec-(int)tstart.tv_sec);
   //de-tach and de-stroy shm..
   printf("And we're back! shm contains %ds and %dns.\n", *(shm+0), *(shm+1));
   //detach shared mem
