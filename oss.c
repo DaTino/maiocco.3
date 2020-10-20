@@ -19,9 +19,9 @@ CS4760 Project 3
 
 FILE* outfile;
 
-struct msgBuffer {
+typedef struct msgBuffer {
   long mtype;
-  int msgData;
+  char msgData[32] = "This is a message!";
 };
 
 static void interruptHandler();
@@ -136,9 +136,8 @@ int main(int argc, char *argv[]) {
   //anyways, Ima set up a  message queue below.
 
   //create message queue
-  struct msgBuffer mb;
+  message mb;
   mb.mtype = 0;
-  mb.msgData = 1;
   int msqid;
   key_t msgKey = 612;
 
