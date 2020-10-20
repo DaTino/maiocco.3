@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
   //create message queue
   message mb;
   mb.mtype = 1;
-  strcpy(mb.msgData, "Please work...");  
+  strcpy(mb.msgData, "Please work...");
   int msqid;
   key_t msgKey = 612;
 
@@ -165,36 +165,52 @@ int main(int argc, char *argv[]) {
       //exec w/ child
     //look for finished children or get update(?) for active children
 
-
   pid_t childpid = 0;
   int status = 0;
   int pid = 0;
-  if((childpid = fork()) < 0) {
-    perror("./oss: ...it was a stillbirth.");
-    exit(1);
-  } else if (childpid == 0) {
-    double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
-    double total_sec = floor(total_nsec/1e9);
-    double nsec_part = fmod(total_nsec, 1e9);
-    fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
-    char *args[]={"./user", NULL};
-    execvp(args[0], args);
-  }
+  int total = 0;
 
-  //send the initial message to get everything going
-  if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
-    perror("oss: Message failed to send.");
-    exit(1);
-  }
-
-  //don't want to destroy shm too fast, so we wait for child to finish.
-  do {
-    pid = waitpid(-1, &status, WNOHANG);
-    if (*(shm+2) != 0) {
-      fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
-      *(shm+2) = 0;   
+  //main looperino right here!
+  while (total < 100 && ((int)tend.tv_sec - (int)tstart.tv_sec) < maxSecs) {
+    if((childpid = fork()) < 0) {
+      perror("./oss: ...it was a stillbirth.");
+      exit(1);
+    } else if (childpid == 0) {
+      //local clock time stuff here
+      double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
+      double total_sec = floor(total_nsec/1e9);
+      double nsec_part = fmod(total_nsec, 1e9);
+      printf("oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
+      fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
+      char *args[]={"./user", NULL};
+      execvp(args[0], args);
+    } else {
+      total++;
+      proc_count++;
     }
-  } while(pid == 0);
+
+    //send the initial message to get everything going
+    if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
+      perror("oss: Message failed to send.");
+      exit(1);
+    }
+
+    //don't want to destroy shm too fast, so we wait for child to finish.
+    if(proc_count >= maxProc) {
+      do {
+        pid = waitpid(-1, &status, WNOHANG);
+        if (*(shm+2) != 0) {
+          fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
+       	  *(shm+2) = 0;
+	 }
+        if (pid > 0) {
+          proc_count--;
+        }
+      } while(pid == 0);
+    }
+
+  }
+
 
   //de-tach and de-stroy shm..
   printf("And we're back! shm contains %ds and %dns.\n", *(shm+0), *(shm+1));
@@ -202,7 +218,7 @@ int main(int argc, char *argv[]) {
   shmdt((void*) shm);
   //delete shared mem
   shmctl(shmid, IPC_RMID, NULL);
-  printf("shm has left us for Sto'Vo'Kor\n");
+  //printf("shm has left us for Sto'Vo'Kor\n");
   if (msgctl(msqid, IPC_RMID, NULL) == -1) {
        perror("oss: msgctl failed to kill the queue");
        exit(1);
