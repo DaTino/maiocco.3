@@ -21,7 +21,7 @@ FILE* outfile;
 
 struct msgBuffer {
   long mtype;
-  int msgData=1;
+  int msgData;
 }message;
 
 static void interruptHandler();
@@ -137,6 +137,8 @@ int main(int argc, char *argv[]) {
 
   //create message queue
   message mb;
+  mb.mtype = 0;
+  mb.msgData = 1;
   int msqid;
   key_t msgKey = 612;
 
