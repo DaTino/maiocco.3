@@ -136,9 +136,7 @@ int main(int argc, char *argv[]) {
   //anyways, Ima set up a  message queue below.
 
   //create message queue
-  struct msgBuffer mb;
-  mb.mtype = 0;
-  mb.msgData = 1;
+  struct msgBuffer mb = {0, 1};
   int msqid;
   key_t msgKey = 612;
 
