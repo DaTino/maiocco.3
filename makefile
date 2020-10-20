@@ -1,10 +1,11 @@
 CC=gcc
 CFLAGS=-I.
+LDFLAGS=-lm
 
 all: oss user
 
 oss: oss.o
-	$(CC) -o oss oss.o
+	$(CC) -o oss $(LDFLAGS) oss.o
 
 user: user.o
 	$(CC) -o user user.o

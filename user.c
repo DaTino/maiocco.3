@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
         //doing stuff in the critical section.
         time_t t;
         srand((unsigned) time(&t));
-        int nsec = rand() % 1000000
+        int nsec = rand() % 1000000;
 
         //shared memory mess here
         int shmid;
