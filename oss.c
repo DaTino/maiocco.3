@@ -192,6 +192,7 @@ int main(int argc, char *argv[]) {
     pid = waitpid(-1, &status, WNOHANG);
     if (*(shm+2) != 0) {
       fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
+      *(shm+2) = 0;   
     }
   } while(pid == 0);
 
