@@ -15,14 +15,15 @@ CS4760 Project 3
 #include <sys/types.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 
 
 FILE* outfile;
 
 typedef struct msgBuffer {
   long mtype;
-  char msgData[32] = "This is a message!";
-};
+  char msgData[32];
+}message;
 
 static void interruptHandler();
 
@@ -137,7 +138,8 @@ int main(int argc, char *argv[]) {
 
   //create message queue
   message mb;
-  mb.mtype = 0;
+  mb.mtype = 1;
+  strcpy(mb.msgData, "Please work...");  
   int msqid;
   key_t msgKey = 612;
 
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
   }
 
   //send the initial message to get everything going
-  if (msgsnd(msqid, &mb, sizeof(int), 0) == -1) {
+  if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
     perror("oss: Message failed to send.");
     exit(1);
   }
