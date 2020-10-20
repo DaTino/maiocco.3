@@ -7,7 +7,7 @@
 struct msgBuffer {
   long mtype;
   int msgData;
-}message;
+};
 
 int main(int argc, char *argv[]){
 
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 
 
   //message queue mess down here
-  message mb;
+  struct msgBuffer mb;
   int msqid;
   key_t msgKey = 612;
 
