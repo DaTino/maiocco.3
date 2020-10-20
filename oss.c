@@ -170,6 +170,13 @@ int main(int argc, char *argv[]) {
   int pid = 0;
   int total = 0;
   int proc_count = 0;
+
+  //send the initial message to get everything going
+  if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
+    perror("oss: Message failed to send.");
+    exit(1);
+  }
+
   //main looperino right here!
   while (total < 100 && ((int)tend.tv_sec - (int)tstart.tv_sec) < maxSecs) {
     if((childpid = fork()) < 0) {
@@ -189,12 +196,6 @@ int main(int argc, char *argv[]) {
       proc_count++;
     }
 
-    //send the initial message to get everything going
-    if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
-      perror("oss: Message failed to send.");
-      exit(1);
-    }
-
     //don't want to destroy shm too fast, so we wait for child to finish.
     if(proc_count >= maxProc) {
       do {
@@ -202,14 +203,14 @@ int main(int argc, char *argv[]) {
         if (*(shm+2) != 0) {
           fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
        	  *(shm+2) = 0;
-	 }
+	      }
         if (pid > 0) {
           proc_count--;
         }
       } while(pid == 0);
     }
 	//printf("proc_count: %d\n", proc_count);
-  clock_gettime(CLOCK_MONOTONIC, &tend); 
+  clock_gettime(CLOCK_MONOTONIC, &tend);
  }
 
 
