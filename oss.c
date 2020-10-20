@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
   int status = 0;
   int pid = 0;
   int total = 0;
-
+  int proc_count = 0;
   //main looperino right here!
   while (total < 100 && ((int)tend.tv_sec - (int)tstart.tv_sec) < maxSecs) {
     if((childpid = fork()) < 0) {
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
       double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
       double total_sec = floor(total_nsec/1e9);
       double nsec_part = fmod(total_nsec, 1e9);
-      printf("oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
+      //printf("oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
       fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
       char *args[]={"./user", NULL};
       execvp(args[0], args);
