@@ -34,7 +34,7 @@ typedef struct shareClock{
 
 int main(int argc, char *argv[]) {
 
-  strict timespec tstart={0,0}, tend={0,0};
+  struct timespec tstart={0,0}, tend={0,0};
   clock_gettime(CLOCK_MONOTONIC, &tstart);
 
   int maxProc = 5;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
        perror("oss: msgctl failed to kill the queue");
        exit(1);
    }
-  
+
   printf("fin.\n");
   return 0;
 }
@@ -220,6 +220,15 @@ static void interruptHandler() {
     perror("oss: error attaching shared memory.");
     exit(1);
   }
+
+  int msqid;
+  key_t msgKey = 612;
+
+  if ((msqid = msgget(msgKey, 0666 | IPC_CREAT)) == -1) {
+    perror("oss: error creating message queue.");
+    exit(1);
+  }
+
   //close file...
   fprintf(outfile, "Interrupt in yo face @ %ds, %dns\n", *(shm+0), *(shm+1));
   fclose(outfile);
