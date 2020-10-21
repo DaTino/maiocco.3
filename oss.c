@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
   int pid = 0;
   int total = 0;
   int proc_count = 0;
-
+  int nsec = 1000000;
   //send the initial message to get everything going
   if (msgsnd(msqid, &mb, sizeof(mb.msgData), 0) == -1) {
     perror("oss: Message failed to send.");
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
         *(shm+1)-=1e9;
       }
       //printf("oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
-      fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
+      fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), *(shm+0), *(shm+1));
       char *args[]={"./user", NULL};
       execvp(args[0], args);
     } else {
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
       do {
         //pid = waitpid(-1, &status, WNOHANG);
         if (*(shm+2) != 0) {
-          fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
+          fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", *(shm+2), *(shm+0), *(shm+1));
           proc_count--;
 	      }
         // if (pid > 0) {
@@ -216,11 +216,11 @@ int main(int argc, char *argv[]) {
       *(shm+2) = 0;
     }
 	//printf("proc_count: %d\n", proc_count);
-  clock_gettime(CLOCK_MONOTONIC, &tend);
+  //clock_gettime(CLOCK_MONOTONIC, &tend);
  }
 
 
-  printf("total: %d, time: %d\n", total, (int)tend.tv_sec-(int)tstart.tv_sec);
+  printf("total: %d, time: %d.%d\n", total, *(shm+0), *(shm+1));
   //de-tach and de-stroy shm..
   printf("And we're back! shm contains %ds and %dns.\n", *(shm+0), *(shm+1));
   //detach shared mem
