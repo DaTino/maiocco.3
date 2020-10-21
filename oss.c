@@ -206,6 +206,7 @@ int main(int argc, char *argv[]) {
       do {
         //pid = waitpid(-1, &status, WNOHANG);
         if (*(shm+2) != 0) {
+          printf("killed %d\n", *(shm+2));
           fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", *(shm+2), *(shm+0), *(shm+1));
           proc_count--;
 	      }
