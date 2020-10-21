@@ -35,8 +35,8 @@ typedef struct shareClock{
 
 int main(int argc, char *argv[]) {
 
-  struct timespec tstart={0,0}, tend={0,0};
-  clock_gettime(CLOCK_MONOTONIC, &tstart);
+  //struct timespec tstart={0,0}, tend={0,0};
+  //clock_gettime(CLOCK_MONOTONIC, &tstart);
 
   int maxProc = 5;
   char* filename = "log.txt";
@@ -178,15 +178,20 @@ int main(int argc, char *argv[]) {
   }
 
   //main looperino right here!
-  while (total < 100 && ((int)tend.tv_sec - (int)tstart.tv_sec) < maxSecs) {
+  while (total < 100 && /*((int)tend.tv_sec - (int)tstart.tv_sec)*/ *(shm+0) < maxSecs) {
     if((childpid = fork()) < 0) {
       perror("./oss: ...it was a stillbirth.");
       exit(1);
     } else if (childpid == 0) {
       //local clock time stuff here
-      double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
-      double total_sec = floor(total_nsec/1e9);
-      double nsec_part = fmod(total_nsec, 1e9);
+      // double total_nsec = ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec);
+      // double total_sec = floor(total_nsec/1e9);
+      // double nsec_part = fmod(total_nsec, 1e9);
+      *(shm+1) += nsec;
+      if (nsec > 1e9) {
+        *(shm+0)+=nsec/1e9;
+        *(shm+1)-=1e9;
+      }
       //printf("oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
       fprintf(outfile,"oss: Creating new child pid %d at my time %d.%d\n", getpid(), total_sec, nsec_part);
       char *args[]={"./user", NULL};
@@ -199,15 +204,16 @@ int main(int argc, char *argv[]) {
     //don't want to destroy shm too fast, so we wait for child to finish.
     if(proc_count >= maxProc) {
       do {
-        pid = waitpid(-1, &status, WNOHANG);
+        //pid = waitpid(-1, &status, WNOHANG);
         if (*(shm+2) != 0) {
           fprintf(outfile, "oss: Child pid %d terminated at system clock time %d.%d\n", getpid(), *(shm+0), *(shm+1));
-       	  *(shm+2) = 0;
-	      }
-        if (pid > 0) {
           proc_count--;
-        }
-      } while(pid == 0);
+	      }
+        // if (pid > 0) {
+        //   proc_count--;
+        // }
+      } while(*(shm+2) == 0);
+      *(shm+2) = 0;
     }
 	//printf("proc_count: %d\n", proc_count);
   clock_gettime(CLOCK_MONOTONIC, &tend);

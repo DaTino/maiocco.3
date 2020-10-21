@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     //Entrance criteria: must have a message.
     if (msgrcv(msqid, &mb, sizeof(int), 0, 0)) {
         //doing stuff in the critical section.
-
+        printf("Child %d got message!\n", getpid());
         //shared memory mess here
 
         //get at that shared mammory...
