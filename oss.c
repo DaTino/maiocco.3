@@ -181,6 +181,11 @@ int main(int argc, char *argv[]) {
   while (total < 100 && /*((int)tend.tv_sec - (int)tstart.tv_sec)*/ *(shm+0) < maxSecs) {
     if((childpid = fork()) < 0) {
       perror("./oss: ...it was a stillbirth.");
+      if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+           perror("oss: msgctl failed to kill the queue");
+           exit(1);
+       }
+       shmctl(shmid, IPC_RMID, NULL);
       exit(1);
     } else if (childpid == 0) {
       //local clock time stuff here
